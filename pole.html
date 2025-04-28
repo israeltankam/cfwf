@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organigramme par pôle</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .node rect {
+      fill: #fff; /* White background */
+      stroke: #4682B4;
+      stroke-width: 1.5px;
+      rx: 10;
+      ry: 10;
+    }
+    .link {
+      fill: none;
+      stroke: #333;
+      stroke-width: 2px;
+    }
+    .tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 5px;
+    font: 16px sans-serif;
+    background: lightyellow;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    pointer-events: none;
+    width: 200px; /* Add fixed width */
+    max-width: 300px; /* Ensures it doesn't exceed this width */
+    word-wrap: break-word; /* Ensures long words break properly */
+  }
+  </style>
+</head>
+<body>
+<svg width="1650" height="680"></svg>
+<script>
+  const nodes = [
+    { id: 'I', label: 'Inovation & Exp. Client', fx: 950, fy: 100 },
+    { id: 'K', label: 'Comptabilité & Administration (*)', fx: 1100, fy: 300},
+    { id: 'S', label: 'Stratégie & Pilotage', fx: 1450, fy: 200 },
+    { id: 'L', label: 'Logistique & Approv.', fx: 650, fy: 600 },
+    { id: 'P', label: 'Production & Qualité', fx: 950, fy: 600 },
+	{ id: 'H', label: 'Inovation & Exp. Client (Nv. 2)', fx: 1100, fy: 600 },
+	{ id: 'U', label: 'Stratégie & Pilotage (Nv. 3)', fx: 1250, fy: 600 },
+	{ id: 'D', label: 'Commercial & Dév. (Nv. 2)', fx: 1500, fy: 600 },
+	{ id: 'C', label: 'Commercial & Développement', fx: 60, fy: 220 },
+	{ id: 'M', label: 'Marketing & Communication', fx: 350, fy: 400 },
+  ];
+
+  // Combine bidirectional links into single entries
+  const bidirectionalLinks = [
+    { source: 'H', target: 'S', 
+	infoForward: 
+	`- Déroulé des formations
+	`,
+	infoReverse: 
+	`- Ordre de formation (career growth and learning)
+	<br \> - Clarification des tâches
+	<br \> - Formation aux offres de service
+	<br \> - Guide de mixologie
+	`  
+	},
+	{ source: 'D', target: 'S', 
+	infoForward: 
+	`- Compte-rendu des leads
+	<br \> - Rapport sur l\'interaction client
+	`,
+	infoReverse: 
+	`- Scripts de vente
+	<br \> - Clarification des tâches
+	`  
+	},
+	{ source: 'U', target: 'S', 
+	infoForward: 
+	`- État des finances
+	<br \> - État des stocks
+	<br \> - Goulots d'étranglement de toute l'entreprise
+	`,
+	infoReverse: 
+	`- Ordre de Payements
+	<br \> - Clarification des tâches
+	`  
+	},
+	{ source: 'D', target: 'H', 
+	infoForward: 
+	`-  Rapport sur l\'interaction client
+	`,
+	infoReverse: 
+	`-  Rapport sur l\'interaction client
+	`  
+	},
+	{ source: 'P', target: 'U', 
+	infoForward: 
+	`-   État des stocks
+	`,
+	infoReverse: 
+	`-  Plan de production
+	<br \> - Demande de l\'état des stocks
+	<br \> - Commandes clients
+	<br \>  - Factures et bons de commandes
+	`  
+	},
+	{ source: 'I', target: 'H', 
+	infoForward: 
+	` - Formation mixologie
+	<br \> - Recettes cocktails
+	<br \> - Techniques de Formation
+	`,
+	infoReverse: 
+	`- Ordre de création de cocktails
+	 <br \> - Ordre d\'engagement de la formation des leads
+	 <br \> - Ordre d\'engagement des démos  
+	`  
+	},
+	{ source: 'I', target: 'S',
+	infoForward:
+	`- Feedback des séances de travail
+	<br \> - Expérience professionelle de Patrick
+	<br \> - Avis sur les actions futures
+	<br \> - Recettes des nouveaux cocktails
+	`, 
+	infoReverse:
+	`- Planning mensuel (??)
+	<br \> - Objectifs à atteindre
+	<br \> - Orientation des séances de travail
+	<br \> - Contenu des formations
+	`
+	},
+	{ source: 'K', target: 'S', 
+	infoForward: 
+	`- Classeurs Excel
+	<br \> - Informations financières
+	`, 
+	infoReverse:
+	`- Évaluation du rendement
+	<br \> - Feedback des tâches
+	` 
+	},
+	{ source: 'U', target: 'K', 
+	infoForward: 
+	` - État des stocks
+	<br \> - Données des ventes
+	<br \> - Charges
+	<br \> - État des créances
+	`, 
+	infoReverse: 
+	`- Données de comptabilité
+	<br \>  - Factures et bons de commandes
+	<br \> - Demande de l\'état des stocks
+	<br \> - Plan de production
+	<br \> - Documents administratifs
+	` 
+	},
+	{ source: 'C', target: 'L', 
+	infoForward: 
+	`
+	`, 
+	infoReverse: 
+	`- Statut des livraisons
+	` },
+	{ source: 'C', target: 'U', 
+	infoForward: 
+	`- Commandes clients
+	`, 
+	infoReverse: 
+	`- Validation commandes clients
+	` },
+	{ source: 'P', target: 'L', 
+	infoForward: 
+	`- Commandes clients
+	<br \>  - Factures
+	`, 
+	infoReverse: 
+	`
+	` },
+	{ source: 'S', target: 'C', 
+	infoForward: 
+	`- Stratégie pour le closer
+	<br \> - Infos de facilitations de ventes
+	<br \> - Documents (??)
+	<br \> - Informations/clarifications venants d\'autres membres
+	`, 
+	infoReverse:
+	`- Rapports de ventes
+	<br \> - Comptes-rendus closing de gros clients
+	`
+	},
+	{ source: 'M', target: 'C',
+	infoForward: 
+	`- Mise à jour des données
+	<br \> - Alertes/rappels
+	<br \> - Supports de vente (3 bis)
+	`, 
+	infoReverse: 
+	`- Infos sur les prospects
+	<br \> - Historique des interactions
+	<br \> - Prévisions de ventes (4)
+	<br \> - Follow-up des ventes (3 bis)
+	` 
+	},
+	{ source: 'M', target: 'U', 
+	infoForward: 
+	`- Commandes confirmées et leurs délais
+	<br \> - Prévision de la demande (4)
+	<br \> - Feedback clients
+	`, 
+	infoReverse: 
+	`- Disponibilité produits
+	<br \> - Historique des commandes (par client)
+	`
+	},
+	{ source: 'K', target: 'M', 
+	infoForward: 
+	`- Plan de production (pour confrontation)
+	`, 
+	infoReverse: 
+	`- Prévision de la demande (pour confrontation)
+	` },
+  ];
+	
+  const svg = d3.select("svg");
+  const width = +svg.attr("width");
+  const height = +svg.attr("height");
+
+  const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  // Create arrow markers for both directions
+  const defs = svg.append("defs");
+  
+  defs.append("marker")
+    .attr("id", "arrow-start")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 0)
+    .attr("refY", 0)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M10,-5L0,0L10,5")
+    .attr("fill", "#333");
+    
+  defs.append("marker")
+    .attr("id", "arrow-end")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 10)
+    .attr("refY", 0)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", "#333");
+
+  const simulation = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(bidirectionalLinks).id(d => d.id).distance(200))
+    .force("charge", d3.forceManyBody().strength(-1000))
+    .force("center", null);
+
+  const link = svg.append("g")
+    .attr("stroke", "#999")
+    .attr("stroke-opacity", 0.6)
+    .selectAll("path")
+    .data(bidirectionalLinks)
+    .join("path")
+    .attr("class", "link")
+    .attr("marker-start", "url(#arrow-start)")
+    .attr("marker-end", "url(#arrow-end)")
+    .on("mousemove", function(event, d) {
+      // Get mouse position relative to the path
+      const path = d3.select(this).node();
+      const pathLength = path.getTotalLength();
+      let mousePoint = svg.node().createSVGPoint();
+      mousePoint.x = event.clientX;
+      mousePoint.y = event.clientY;
+      mousePoint = mousePoint.matrixTransform(path.getScreenCTM().inverse());
+      
+      // Find the closest point on the path to the mouse
+      let bestLength = 0;
+      let bestDistance = Infinity;
+      
+      // Sample points along the path to find the closest one
+      for (let len = 0; len <= pathLength; len += pathLength / 20) {
+        const point = path.getPointAtLength(len);
+        const distance = Math.sqrt(Math.pow(point.x - mousePoint.x, 2) + Math.pow(point.y - mousePoint.y, 2));
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestLength = len;
+        }
+      }
+      
+      // Determine which tooltip to show based on position along the path
+      const ratio = bestLength / pathLength;
+      // CORRECTED: Show forward tooltip when closer to target (ratio > 0.5)
+	  const tooltipText = ratio > 0.5 ? d.infoForward : d.infoReverse;
+      
+      tooltip.transition().duration(100).style("opacity", .9);
+      tooltip.html(tooltipText)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 10) + "px");
+    })
+    .on("mouseout", function() {
+      tooltip.transition().duration(500).style("opacity", 0);
+    });
+
+  const node = svg.append("g")
+    .selectAll("g")
+    .data(nodes)
+    .join("g")
+    .attr("class", "node")
+    .call(d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended));
+
+  node.append("rect")
+    .attr("width", 120)
+    .attr("height", 60)
+    .attr("x", -60)
+    .attr("y", -30);
+
+	// Replace your current text append code with this:
+	node.append("text")
+	  .attr("text-anchor", "middle")
+	  .attr("dy", "-0.5em")  // First line (top)
+	  .text(d => {
+		const parts = d.label.split(" & ");
+		return parts[0] + (parts.length > 1 ? " &" : ""); // Keep "et" on first line
+	  });
+
+	node.append("text")
+	  .attr("text-anchor", "middle")
+	  .attr("dy", "1.1em")   // Second line (bottom)
+	  .text(d => {
+		const parts = d.label.split(" & ");
+		return parts.length > 1 ? parts[1] : ""; // Second part (after "et")
+	  });
+
+  simulation.on("tick", () => {
+    link.attr("d", d => {
+	  // Calculate direction vector between nodes
+	  const dx = d.target.x - d.source.x;
+	  const dy = d.target.y - d.source.y;
+	  const length = Math.sqrt(dx * dx + dy * dy);
+	  
+	  // Calculate normalized direction vector
+	  const nx = dx / length;
+	  const ny = dy / length;
+	  
+	  // Calculate offset (half of rectangle width + some padding)
+	  const offset = 65; // 50 (half width) + 15 (padding)
+	  
+	  // Calculate adjusted start and end points
+	  const sourceX = d.source.x + nx * offset;
+	  const sourceY = d.source.y + ny * offset;
+	  const targetX = d.target.x - nx * offset;
+	  const targetY = d.target.y - ny * offset;
+	  
+	  // Calculate control point for the curve
+	  // Position it perpendicular to the line at the midpoint
+	  const midX = (sourceX + targetX) / 2;
+	  const midY = (sourceY + targetY) / 2;
+	  
+	  // Adjust curvature amount (higher values = more curve)
+	  const curvature = 80;
+	  
+	  // Calculate control point perpendicular to the line
+	  const ctrlX = midX + curvature * -ny;
+	  const ctrlY = midY + curvature * nx;
+	  
+	  // Create a quadratic Bézier curve
+	  return `M${sourceX},${sourceY}Q${ctrlX},${ctrlY} ${targetX},${targetY}`;
+	});
+	
+
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+
+  function dragstarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+
+  function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+  }
+
+  function dragended(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+</script>
+(*) Administration = Stratégie et Pilotage (Niv. 2)
+<br />
+<br />
+<br />
+<font size="5"> 
+<a href="index.html"> <<< Back </a>
+</font>
