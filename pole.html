@@ -37,16 +37,16 @@
 <svg width="1650" height="680"></svg>
 <script>
   const nodes = [
-    { id: 'I', label: 'Inovation & Exp. Client', fx: 950, fy: 100 },
-    { id: 'K', label: 'Comptabilité & Administration (*)', fx: 1100, fy: 300},
-    { id: 'S', label: 'Stratégie & Pilotage', fx: 1450, fy: 200 },
-    { id: 'L', label: 'Logistique & Approv.', fx: 650, fy: 600 },
-    { id: 'P', label: 'Production & Qualité', fx: 950, fy: 600 },
-	{ id: 'H', label: 'Inovation & Exp. Client (Nv. 2)', fx: 1100, fy: 600 },
-	{ id: 'U', label: 'Stratégie & Pilotage (Nv. 3)', fx: 1250, fy: 600 },
-	{ id: 'D', label: 'Commercial & Dév. (Nv. 2)', fx: 1500, fy: 600 },
-	{ id: 'C', label: 'Commercial & Développement', fx: 60, fy: 220 },
-	{ id: 'M', label: 'Marketing & Communication', fx: 350, fy: 400 },
+    { id: 'I', label: 'Inovation & Exp. Client', head: 'Patrick', fx: 950, fy: 100 },
+    { id: 'K', label: 'Comptabilité & Administration (*)', head: 'Dimitri', fx: 1100, fy: 300},
+    { id: 'S', label: 'Stratégie & Pilotage', head: 'Ene', fx: 1450, fy: 200 },
+    { id: 'L', label: 'Logistique & Approv.', head: 'Robertine', fx: 650, fy: 600 },
+    { id: 'P', label: 'Production & Qualité', head: 'Robertine', fx: 950, fy: 600 },
+	{ id: 'H', label: 'Inovation & Exp. Client (Nv. 2)', head: 'Robertine', fx: 1100, fy: 600 },
+	{ id: 'U', label: 'Stratégie & Pilotage (Nv. 3)', head: 'Robertine', fx: 1250, fy: 600 },
+	{ id: 'D', label: 'Commercial & Dév. (Nv. 2)', head: 'Robertine', fx: 1500, fy: 600 },
+	{ id: 'C', label: 'Commercial & Développement', head: 'Martine', fx: 60, fy: 220 },
+	{ id: 'M', label: 'Marketing & Communication', head: 'Ingrid', fx: 350, fy: 400 },
   ];
 
   // Combine bidirectional links into single entries
@@ -144,6 +144,7 @@
 	<br \> - Données des ventes
 	<br \> - Charges
 	<br \> - État des créances
+	<br \> - Problèmes administratifs
 	`, 
 	infoReverse: 
 	`- Données de comptabilité
@@ -179,7 +180,7 @@
 	infoForward: 
 	`- Stratégie pour le closer
 	<br \> - Infos de facilitations de ventes
-	<br \> - Documents (??)
+	<br \> - Documents administratifs
 	<br \> - Informations/clarifications venants d\'autres membres
 	`, 
 	infoReverse:
@@ -195,6 +196,7 @@
 	`, 
 	infoReverse: 
 	`- Infos sur les prospects
+	<br \> - Cartographie clients
 	<br \> - Historique des interactions
 	<br \> - Prévisions de ventes
 	<br \> - Follow-up des ventes
@@ -217,6 +219,39 @@
 	`, 
 	infoReverse: 
 	`- Prévision de la demande (pour confrontation)
+	` },
+	{ source: 'P', target: 'M', 
+	infoForward: 
+	`- Disponibilité des produits
+	`, 
+	infoReverse: 
+	`
+	` },
+	{ source: 'D', target: 'C', 
+	infoForward: 
+	`
+	- Gros CRH
+	`, 
+	infoReverse: 
+	`
+	` },
+	{ source: 'C', target: 'H', 
+	infoForward: 
+	`
+	- Ordre d\'engagement des demos
+	<br \> - Ordre d\'engagement des formation de leads
+	`, 
+	infoReverse: 
+	`
+	` },
+	{ source: 'C', target: 'K', 
+	infoForward: 
+	`
+	- Problèmes administratifs
+	<br \> - Documents administratifs
+	`, 
+	infoReverse: 
+	`- Documents administratifs
 	` },
   ];
 	
@@ -326,7 +361,14 @@
     .attr("x", -60)
     .attr("y", -30);
 
-	// Replace your current text append code with this:
+  // Add head name in red above the rectangle
+  node.append("text")
+    .attr("text-anchor", "middle")
+    .attr("y", -40)  // Position above the rectangle
+    .style("fill", "red")
+    .text(d => d.head);
+
+	// Split label into two lines
 	node.append("text")
 	  .attr("text-anchor", "middle")
 	  .attr("dy", "-0.5em")  // First line (top)
@@ -400,6 +442,7 @@
     d.fy = null;
   }
 </script>
+<br />
 (*) Administration = Stratégie et Pilotage (Niv. 2)
 <br />
 <br />
@@ -407,3 +450,5 @@
 <font size="5"> 
 <a href="index.html"> <<< Back </a>
 </font>
+</body>
+</html>
