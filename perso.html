@@ -31,130 +31,149 @@
   </style>
 </head>
 <body>
-<svg width="1000" height="1000"></svg>
+<svg width="1200" height="1000"></svg>
 <script>
   const nodes = [
     { id: 'I', label: 'Ingrid', fx: 500, fy: 50 },
     { id: 'R', label: 'Robertine', fx: 100, fy: 850 },
-    { id: 'E', label: 'Ene', fx: 900, fy: 850 },
-    { id: 'M', label: 'Martine', fx: 600, fy: 250 },
-    { id: 'D', label: 'Dimitri', fx: 600, fy: 450 },
-    { id: 'P', label: 'Patrick', fx: 600, fy: 650 }
+    { id: 'E', label: 'Ene', fx: 1000, fy: 850 },
+    { id: 'M', label: 'Martine', fx: 700, fy: 250 },
+    { id: 'D', label: 'Dimitri', fx: 700, fy: 450 },
+    { id: 'P', label: 'Patrick', fx: 700, fy: 650 }
   ];
 
   // Combine bidirectional links into single entries
   const bidirectionalLinks = [
     { source: 'R', target: 'E', 
 	infoForward: 
-	`Déroulé des formations
-	<br \> Compte-rendu des leads
-	<br \> État des finances
-	<br \> État des stocks
-	<br \> Rapport sur l\'interaction client (1)
-	<br \> Goulots d'étranglement de toute l'entreprise`, 
+	`- Déroulé des formations
+	<br \> - Compte-rendu des leads
+	<br \> - État des finances
+	<br \> - État des stocks
+	<br \> - Rapport sur l\'interaction client
+	<br \> - Goulots d'étranglement de toute l'entreprise`, 
 	infoReverse: 
-	`Ordre de formation (career growth and learning)
-	<br \> Ordre de payement 
-	<br \> Clarification des tâches
-	<br \> Formation aux offres de service
-	<br \> Scripts de vente
-	<br \> Guide de mixologie (2)
+	`- Ordre de formation (career growth and learning)
+	<br \> - Ordre de payement 
+	<br \> - Clarification des tâches
+	<br \> - Formation aux offres de service
+	<br \> - Scripts de vente
+	<br \> - Guide de mixologie
 	`  
 	},
     { source: 'R', target: 'D', 
 	infoForward: 
-	` État des stocks
-	<br \> Données des ventes
-	<br \> Charges
-	<br \> État des créances
+	`- État des stocks
+	<br \> - Données des ventes
+	<br \> - Charges
+	<br \> - État des créances
 	`, 
 	infoReverse: 
 	`Données de comptabilité
-	<br \>  Factures et bons de commandes
-	<br \> Demande de l\'état des stocks
-	<br \> Fiches de production
-	<br \> Documents administratifs
+	<br \> -  Factures et bons de commandes
+	<br \> - Demande de l\'état des stocks
+	<br \> - Fiches de production
+	<br \> - Documents administratifs
 	` 
 	},
     { source: 'P', target: 'R',
 	infoForward: 
-	` Formation mixologie
-	<br \> Recettes cocktails
-	<br \> Techniques de Formation
+	`- Formation mixologie
+	<br \> - Recettes cocktails
+	<br \> - Techniques de Formation
 	`, 
 	infoReverse: 
-	`Ordre de création de cocktails
-	 <br \> Ordre d\'engagement de la formation des leads
-	 <br \> Ordre d\'engagement des démos
+	`- Ordre de création de cocktails
+	 <br \> - Ordre d\'engagement de la formation des leads
+	 <br \> - Ordre d\'engagement des démos
 	`
 	},
     { source: 'P', target: 'E',
 	infoForward:
-	`Feedback des séances de travail
-	<br \> Expérience professionelle de Patrick
-	<br \> Avis sur les actions futures
-	<br \> Recettes des nouveaux cocktails
+	`- Feedback des séances de travail
+	<br \> - Expérience professionelle de Patrick
+	<br \> - Avis sur les actions futures
+	<br \> - Recettes des nouveaux cocktails
 	`, 
 	infoReverse:
-	`Planning mensuel (??)
-	<br \> Objectifs à atteindre
-	<br \> Orientation des séances de travail
-	<br \> Contenu des formations
+	`- Planning mensuel
+	<br \> - Objectifs à atteindre
+	<br \> - Orientation des séances de travail
+	<br \> - Contenu des formations
 	`
 	},
     { source: 'D', target: 'E', 
 	infoForward: 
-	`Classeurs Excel
-	<br \> Informations financières
+	`- Classeurs Excel
+	<br \> - Informations financières
 	`, 
 	infoReverse:
-	`Évaluation du rendement de Dimitri
-	<br \> Feedback des tâches de Dimitri
+	`- Évaluation du rendement de Dimitri
+	<br \> - Feedback des tâches de Dimitri
 	` 
 	},
     { source: 'E', target: 'M', 
 	infoForward: 
-	`Stratégie pour le closer
-	<br \> Infos de facilitations de ventes
-	<br \> Documents (??)
-	<br \> Informations/clarifications venants d\'autres membres (3)
+	`- Stratégie pour le closer
+	<br \> - Infos de facilitations de ventes
+	<br \> - Documents (??)
+	<br \> - Informations/clarifications venants d\'autres membres (3)
 	`, 
 	infoReverse:
-	`Rapports de ventes
-	<br \> Comptes-rendus closing de gros clients
+	`- Rapports de ventes
+	<br \> - Comptes-rendus closing de gros clients
 	`
 	},
     { source: 'I', target: 'M',
 	infoForward: 
-	`Mise à jour des données
-	<br \> Alertes/rappels
-	<br \> Supports de vente (3 bis)
+	`- Mise à jour des données
+	<br \> - Alertes/rappels
+	<br \> - Supports de vente
 	`, 
 	infoReverse: 
-	`Infos sur les prospects
-	<br \> Historique des interactions
-	<br \> Prévisions de ventes (4)
-	<br \> Follow-up des ventes (3 bis)
+	`- Infos sur les prospects
+	<br \> - Cartographie clients
+	<br \> - Historique des interactions
+	<br \> - Prévisions de ventes
+	<br \> - Follow-up des ventes
 	` 
 	},
     { source: 'I', target: 'R', 
 	infoForward: 
-	`Commandes confirmées et leurs délais
-	<br \> Prévision de la demande (4)
-	<br \> Feedback clients
+	`- Commandes confirmées et leurs délais
+	<br \> - Prévision de la demande
+	<br \> - Feedback clients
 	`, 
 	infoReverse: 
-	`Disponibilité produits
-	<br \> Historique des commandes (par client)
+	`- Disponibilité produits
+	<br \> - Historique des commandes (par client)
 	`
 	},
     { source: 'M', target: 'R', 
 	infoForward: 
-	`Commandes clients
+	`- Commandes clients
+	<br \> - Ordre d\'engagement des demos
+	<br \> - Ordre d\'engagement des formation de leads
 	`, 
 	infoReverse: 
-	`Statut des livraisons
-	` }
+	`- Statut des livraisons
+	` },
+	{ source: 'M', target: 'D', 
+	infoForward: 
+	`- Documents administratifs
+	<br \> - Problèmes administratifs
+	`, 
+	infoReverse:
+	`- Documents administratifs
+	` 
+	},
+	{ source: 'D', target: 'I', 
+	infoForward: 
+	`- Plan de production (pour confrontation)
+	`, 
+	infoReverse: 
+	`- Prévision de la demande (pour confrontation)
+	` },
   ];
 
   const svg = d3.select("svg");
@@ -308,15 +327,6 @@
   }
 </script>
 
-<ol>
-  <li>Rôle que Robertine a oublié de s'attribuer elle-même, à rajouter (Commercial et développement, niveau 2) 
-- Fait partie des informations qui "flow" vers Martine via Ene.</li>
-  <li> Il manque donc une info de Pat -> Ene (recette de nouveaux cocktails) que je me suis permis d'ajouter.</li>
-  <li> Ene est au centre de quasiment toute interaction d'autre membre avec Martine
-    <br /> (3 bis) Interactions Ene <-> Martine que j'ai réorienté en Ingrid <-> Martine
-  </li>
-  <li> Besoin de créer ultérieurement un arc Dimitri <-> Ingrid pour confronter les prévisions
-</ol>
 
 <br />
 <br />
