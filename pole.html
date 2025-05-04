@@ -7,258 +7,268 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     .node rect {
-      fill: #fff; /* White background */
+      fill: #f0f0f0;
       stroke: #4682B4;
       stroke-width: 1.5px;
       rx: 10;
       ry: 10;
     }
+    .node.highlighted rect {
+      fill: #ffeb3b;
+      stroke: #ff6f00;
+      stroke-width: 2px;
+    }
+    .node.highlighted text {
+      fill: #ff6f00;
+    }
     .link {
       fill: none;
       stroke: #333;
       stroke-width: 2px;
+      opacity: 0;
     }
-    .tooltip {
-    position: absolute;
-    text-align: left;
-    padding: 5px;
-    font: 16px sans-serif;
-    background: lightyellow;
-    border: 2px solid #ccc;
-    border-radius: 5px;
-    pointer-events: none;
-    width: 200px; /* Add fixed width */
-    max-width: 300px; /* Ensures it doesn't exceed this width */
-    word-wrap: break-word; /* Ensures long words break properly */
-  }
+    .link-tooltip {
+      font-size: 12px;
+      fill: #333;
+      text-anchor: middle;
+      pointer-events: none;
+    }
   </style>
+  <style>
+    .link-tooltip {
+        pointer-events: auto;
+    }
+</style>
 </head>
 <body>
-<svg width="1650" height="680"></svg>
+<center>
+<font size="5"> 
+Cliquer sur deux ou plusieurs pôles pour voir leur interactions
+</font>
+</center>
+<svg width="1850" height="800"></svg>
 <script>
   const nodes = [
     { id: 'I', label: 'Inovation & Exp. Client', head: 'Patrick', fx: 950, fy: 100 },
     { id: 'K', label: 'Comptabilité & Administration (*)', head: 'Dimitri', fx: 1100, fy: 300},
-    { id: 'S', label: 'Stratégie & Pilotage', head: 'Ene', fx: 1450, fy: 200 },
+    { id: 'S', label: 'Stratégie & Pilotage', head: 'Ene', fx: 1650, fy: 200 },
     { id: 'L', label: 'Logistique & Approv.', head: 'Robertine', fx: 650, fy: 600 },
     { id: 'P', label: 'Production & Qualité', head: 'Robertine', fx: 950, fy: 600 },
-	{ id: 'H', label: 'Inovation & Exp. Client (Nv. 2)', head: 'Robertine', fx: 1100, fy: 600 },
-	{ id: 'U', label: 'Stratégie & Pilotage (Nv. 3)', head: 'Robertine', fx: 1250, fy: 600 },
-	{ id: 'D', label: 'Commercial & Dév. (Nv. 2)', head: 'Robertine', fx: 1500, fy: 600 },
-	{ id: 'C', label: 'Commercial & Développement', head: 'Martine', fx: 60, fy: 220 },
-	{ id: 'M', label: 'Marketing & Communication', head: 'Ingrid', fx: 350, fy: 400 },
+    { id: 'H', label: 'Inovation & Exp. Client (Nv. 2)', head: 'Robertine', fx: 1100, fy: 600 },
+    { id: 'U', label: 'Stratégie & Pilotage (Nv. 3)', head: 'Robertine', fx: 1450, fy: 600 },
+    { id: 'D', label: 'Commercial & Dév. (Nv. 2)', head: 'Robertine', fx: 1700, fy: 600 },
+    { id: 'C', label: 'Commercial & Développement', head: 'Martine', fx: 60, fy: 220 },
+    { id: 'M', label: 'Marketing & Communication', head: 'Ingrid', fx: 350, fy: 500 },
   ];
-
-  // Combine bidirectional links into single entries
-  const bidirectionalLinks = [
-    { source: 'H', target: 'S', 
-	infoForward: 
-	`- Déroulé des formations
-	`,
-	infoReverse: 
-	`- Ordre de formation (career growth and learning)
-	<br \> - Clarification des tâches
-	<br \> - Formation aux offres de service
-	<br \> - Guide de mixologie
-	`  
-	},
-	{ source: 'D', target: 'S', 
-	infoForward: 
-	`- Compte-rendu des leads
-	<br \> - Rapport sur l\'interaction client
-	`,
-	infoReverse: 
-	`- Scripts de vente
-	<br \> - Clarification des tâches
-	`  
-	},
-	{ source: 'U', target: 'S', 
-	infoForward: 
-	`- État des finances
-	<br \> - État des stocks
-	<br \> - Goulots d'étranglement de toute l'entreprise
-	`,
-	infoReverse: 
-	`- Ordre de Payements
-	<br \> - Clarification des tâches
-	`  
-	},
-	{ source: 'D', target: 'H', 
-	infoForward: 
-	`-  Rapport sur l\'interaction client
-	`,
-	infoReverse: 
-	`-  Rapport sur l\'interaction client
-	`  
-	},
-	{ source: 'P', target: 'U', 
-	infoForward: 
-	`-   État des stocks
-	`,
-	infoReverse: 
-	`-  Plan de production
-	<br \> - Demande de l\'état des stocks
-	<br \> - Commandes clients
-	<br \>  - Factures et bons de commandes
-	`  
-	},
-	{ source: 'I', target: 'H', 
-	infoForward: 
-	` - Formation mixologie
-	<br \> - Recettes cocktails
-	<br \> - Techniques de Formation
-	`,
-	infoReverse: 
-	`- Ordre de création de cocktails
-	 <br \> - Ordre d\'engagement de la formation des leads
-	 <br \> - Ordre d\'engagement des démos  
-	`  
-	},
-	{ source: 'I', target: 'S',
-	infoForward:
-	`- Feedback des séances de travail
-	<br \> - Expérience professionelle de Patrick
-	<br \> - Avis sur les actions futures
-	<br \> - Recettes des nouveaux cocktails
-	`, 
-	infoReverse:
-	`- Planning mensuel (??)
-	<br \> - Objectifs à atteindre
-	<br \> - Orientation des séances de travail
-	<br \> - Contenu des formations
-	`
-	},
-	{ source: 'K', target: 'S', 
-	infoForward: 
-	`- Classeurs Excel
-	<br \> - Informations financières
-	`, 
-	infoReverse:
-	`- Évaluation du rendement
-	<br \> - Feedback des tâches
-	` 
-	},
-	{ source: 'U', target: 'K', 
-	infoForward: 
-	` - État des stocks
-	<br \> - Données des ventes
-	<br \> - Charges
-	<br \> - État des créances
-	<br \> - Problèmes administratifs
-	`, 
-	infoReverse: 
-	`- Données de comptabilité
-	<br \>  - Factures et bons de commandes
-	<br \> - Demande de l\'état des stocks
-	<br \> - Plan de production
-	<br \> - Documents administratifs
-	` 
-	},
-	{ source: 'C', target: 'L', 
-	infoForward: 
-	`
-	`, 
-	infoReverse: 
-	`- Statut des livraisons
-	` },
-	{ source: 'C', target: 'U', 
-	infoForward: 
-	`- Commandes clients
-	`, 
-	infoReverse: 
-	`- Validation commandes clients
-	` },
-	{ source: 'P', target: 'L', 
-	infoForward: 
-	`- Commandes clients
-	<br \>  - Factures
-	`, 
-	infoReverse: 
-	`
-	` },
-	{ source: 'S', target: 'C', 
-	infoForward: 
-	`- Stratégie pour le closer
-	<br \> - Infos de facilitations de ventes
-	<br \> - Documents administratifs
-	<br \> - Informations/clarifications venants d\'autres membres
-	`, 
-	infoReverse:
-	`- Rapports de ventes
-	<br \> - Comptes-rendus closing de gros clients
-	`
-	},
-	{ source: 'M', target: 'C',
-	infoForward: 
-	`- Mise à jour des données
-	<br \> - Alertes/rappels
-	<br \> - Supports de vente
-	`, 
-	infoReverse: 
-	`- Infos sur les prospects
-	<br \> - Cartographie clients
-	<br \> - Historique des interactions
-	<br \> - Prévisions de ventes
-	<br \> - Follow-up des ventes
-	` 
-	},
-	{ source: 'M', target: 'U', 
-	infoForward: 
-	`- Commandes confirmées et leurs délais
-	<br \> - Prévision de la demande (4)
-	<br \> - Feedback clients
-	`, 
-	infoReverse: 
-	`- Disponibilité produits
-	<br \> - Historique des commandes (par client)
-	`
-	},
-	{ source: 'K', target: 'M', 
-	infoForward: 
-	`- Plan de production (pour confrontation)
-	`, 
-	infoReverse: 
-	`- Prévision de la demande (pour confrontation)
-	` },
-	{ source: 'D', target: 'C', 
-	infoForward: 
-	`
-	- Gros CRH
-	`, 
-	infoReverse: 
-	`
-	` },
-	{ source: 'C', target: 'H', 
-	infoForward: 
-	`
-	- Ordre d\'engagement des demos
-	<br \> - Ordre d\'engagement des formation de leads
-	`, 
-	infoReverse: 
-	`
-	` },
-	{ source: 'C', target: 'K', 
-	infoForward: 
-	`
-	- Problèmes administratifs
-	<br \> - Documents administratifs
-	`, 
-	infoReverse: 
-	`- Documents administratifs
-	` },
-  ];
+	let isDragging = false;
+	let startX = 0;
+	let startY = 0;
+	let dragOffset = { x: 0, y: 0 };
 	
-  const svg = d3.select("svg");
-  const width = +svg.attr("width");
-  const height = +svg.attr("height");
+	// Add these variables at the top
+	let activeTooltip = null;
+	let tooltipStartX = 0;
+	let tooltipStartY = 0;
 
-  const tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip")
-    .style("opacity", 0);
-
-  // Create arrow markers for both directions
-  const defs = svg.append("defs");
   
+  // Constants for labels
+const der_formation = "Déroulé des formations";
+const clar_taches = "Clarification des tâches";
+const for_offres_service = "Formation aux offres de service";
+const rap_interaction_client = "Rapport sur l'interaction client";
+const ord_engag_demos = "Ordre d'engagement des démos";
+const ord_formation = "Ordre de formation (career growth and learning)";
+const guide_mixologie = "Guide de mixologie";
+const cr_leads = "Compte-rendu des leads";
+const sc_vente = "Scripts de vente";
+const etat_finances = "État des finances";
+const etat_stocks = "État des stocks";
+const ge_entreprise = "Goulots d'étranglement de toute l'entreprise";
+const ord_paiements = "Ordre de Payements";
+const plan_production = "Plan de production";
+const demande_stocks = "Demande de l'état des stocks";
+const comm_clients = "Commandes clients";
+const fac_bons = "Factures et bons de commandes";
+const for_mixologie = "Formation mixologie";
+const rec_cocktails = "Recettes cocktails";
+const tech_formation = "Techniques de Formation";
+const ord_creation_cocktails = "Ordre de création de cocktails";
+const ord_engag_formation_leads = "Ordre d'engagement de la formation des leads";
+const fb_seances = "Feedback des séances de travail";
+const exp_pro_patrick = "Expérience professionelle de Patrick";
+const avis_actions = "Avis sur les actions futures";
+const rec_nouveaux_cocktails = "Recettes des nouveaux cocktails";
+const plan_mensuel = "Planning mensuel (??)";
+const obj_atteindre = "Objectifs à atteindre";
+const or_seances = "Orientation des séances de travail";
+const cont_formations = "Contenu des formations";
+const class_excel = "Classeurs Excel";
+const inf_financieres = "Informations financières";
+const eval_rendement = "Évaluation du rendement";
+const fb_taches = "Feedback des tâches";
+const d_ventes = "Données des ventes";
+const charges = "Charges";
+const etat_creances = "État des créances";
+const pb_admin = "Problèmes administratifs";
+const d_compta = "Données de comptabilité";
+const docs_admin = "Documents administratifs";
+const st_livraisons = "Statut des livraisons";
+const val_commandes = "Validation commandes clients";
+const strat_closer = "Stratégie pour le closer";
+const inf_facilitations = "Infos de facilitations de ventes";
+const inf_clarifications = "Informations/clarifications venants d'autres membres";
+const rp_ventes = "Rapports de ventes";
+const cr_closing_gros = "Comptes-rendus closing de gros clients";
+const maj_donnees = "Mise à jour des données";
+const alertes_rappels = "Alertes/rappels";
+const supp_vente = "Supports de vente";
+const inf_prospects = "Infos sur les prospects";
+const cart_clients = "Cartographie clients";
+const histo_interactions = "Historique des interactions";
+const prev_ventes = "Prévisions de ventes";
+const fu_ventes = "Follow-up des ventes";
+const comm_confirm_delais = "Commandes confirmées et leurs délais";
+const prev_demande = "Prévision de la demande (4)";
+const fb_clients = "Feedback clients";
+const dispo_produits = "Disponibilité produits";
+const histo_commandes_client = "Historique des commandes (par client)";
+const gros_crh = "Gros CRH";
+const ord_engag_demos_leads = "Ordre d'engagement des formation de leads";
+
+// Bidirectional links using constants 
+const bidirectionalLinks = [
+  {
+    source: 'H', target: 'S',
+    infoForward: `- ${der_formation}`,
+    infoReverse: `- ${ord_formation}<br> - ${clar_taches}<br> - ${for_offres_service}<br> - ${guide_mixologie}`
+  },
+  {
+    source: 'D', target: 'S',
+    infoForward: `- ${cr_leads}<br> - ${rap_interaction_client}`,
+    infoReverse: `- ${sc_vente}<br> - ${clar_taches}`
+  },
+  {
+    source: 'U', target: 'S',
+    infoForward: `- ${etat_finances}<br> - ${etat_stocks}<br> - ${ge_entreprise}`,
+    infoReverse: `- ${ord_paiements}<br> - ${clar_taches}`
+  },
+  {
+    source: 'D', target: 'H',
+    infoForward: `- ${rap_interaction_client}`,
+    infoReverse: `- ${rap_interaction_client}`
+  },
+  {
+    source: 'P', target: 'U',
+    infoForward: `- ${etat_stocks}`,
+    infoReverse: `- ${plan_production}<br> - ${demande_stocks}<br> - ${comm_clients}<br> - ${fac_bons}`
+  },
+  {
+    source: 'I', target: 'H',
+    infoForward: `- ${for_mixologie}<br> - ${rec_cocktails}<br> - ${tech_formation}`,
+    infoReverse: `- ${ord_creation_cocktails}<br> - ${ord_engag_formation_leads}<br> - ${ord_engag_demos}`
+  },
+  {
+    source: 'I', target: 'S',
+    infoForward: `- ${fb_seances}<br> - ${exp_pro_patrick}<br> - ${avis_actions}<br> - ${rec_nouveaux_cocktails}`,
+    infoReverse: `- ${plan_mensuel}<br> - ${obj_atteindre}<br> - ${or_seances}<br> - ${cont_formations}`
+  },
+  {
+    source: 'K', target: 'S',
+    infoForward: `- ${class_excel}<br> - ${inf_financieres}`,
+    infoReverse: `- ${eval_rendement}<br> - ${fb_taches}`
+  },
+  {
+    source: 'U', target: 'K',
+    infoForward: `- ${etat_stocks}<br> - ${d_ventes}<br> - ${charges}<br> - ${etat_creances}<br> - ${pb_admin}`,
+    infoReverse: `- ${d_compta}<br> - ${fac_bons}<br> - ${demande_stocks}<br> - ${plan_production}<br> - ${docs_admin}`
+  },
+  {
+    source: 'L', target: 'C',
+    infoForward: `- ${st_livraisons}`,
+    infoReverse: ``
+  },
+  {
+    source: 'C', target: 'U',
+    infoForward: `- ${comm_clients}`,
+    infoReverse: `- ${val_commandes}`
+  },
+  {
+    source: 'P', target: 'L',
+    infoForward: `- ${comm_clients}<br> - ${fac_bons}`,
+    infoReverse: ``
+  },
+  {
+    source: 'S', target: 'C',
+    infoForward: `- ${strat_closer}<br> - ${inf_facilitations}<br> - ${docs_admin}<br> - ${inf_clarifications}`,
+    infoReverse: `- ${rp_ventes}<br> - ${cr_closing_gros}`
+  },
+  {
+    source: 'M', target: 'C',
+    infoForward: `- ${maj_donnees}<br> - ${alertes_rappels}<br> - ${supp_vente}`,
+    infoReverse: `- ${inf_prospects}<br> - ${cart_clients}<br> - ${histo_interactions}<br> - ${prev_ventes}<br> - ${fu_ventes}`
+  },
+  {
+    source: 'M', target: 'U',
+    infoForward: `- ${comm_confirm_delais}<br> - ${prev_demande}<br> - ${fb_clients}`,
+    infoReverse: `- ${dispo_produits}<br> - ${histo_commandes_client}`
+  },
+  {
+    source: 'K', target: 'M',
+    infoForward: `- ${plan_production} (pour confrontation)`,
+    infoReverse: `- ${prev_demande} (pour confrontation)`
+  },
+  {
+    source: 'D', target: 'C',
+    infoForward: `- ${gros_crh}`,
+    infoReverse: ``
+  },
+  {
+    source: 'C', target: 'H',
+    infoForward: `- ${ord_engag_demos}<br> - ${ord_engag_formation_leads}`,
+    infoReverse: ``
+  },
+  {
+    source: 'C', target: 'K',
+    infoForward: `- ${pb_admin}<br> - ${docs_admin}`,
+    infoReverse: `- ${docs_admin}`
+  }
+];
+
+	
+  // Create node map for lookup
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  
+  // Process links to replace IDs with node objects
+  const processedLinks = bidirectionalLinks.map(link => ({
+    ...link,
+    source: nodeMap.get(link.source),
+    target: nodeMap.get(link.target)
+  }));
+
+  const svg = d3.select("svg");
+  const highlightedNodes = new Set();
+  
+  svg.on("mousedown", function(event) {
+	  isDragging = true;
+	  const [x, y] = d3.pointer(event);
+	  startX = x - dragOffset.x;
+	  startY = y - dragOffset.y;
+	});
+
+	svg.on("mousemove", function(event) {
+	  if (!isDragging) return;
+	  const [x, y] = d3.pointer(event);
+	  dragOffset.x = x - startX;
+	  dragOffset.y = y - startY;
+	  simulation.alpha(0.3).restart(); // Update positions
+	});
+
+	svg.on("mouseup mouseleave", function() {
+	  isDragging = false;
+	});
+
+  // Arrow markers setup
+  const defs = svg.append("defs");
   defs.append("marker")
     .attr("id", "arrow-start")
     .attr("viewBox", "0 -5 10 10")
@@ -283,70 +293,138 @@
     .attr("d", "M0,-5L10,0L0,5")
     .attr("fill", "#333");
 
-  const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(bidirectionalLinks).id(d => d.id).distance(200))
-    .force("charge", d3.forceManyBody().strength(-1000))
-    .force("center", null);
+  // Create link groups
+  const linkGroups = svg.append("g")
+    .selectAll("g.link-group")
+    .data(processedLinks)
+    .join("g")
+    .attr("class", "link-group");
 
-  const link = svg.append("g")
-    .attr("stroke", "#999")
-    .attr("stroke-opacity", 0.6)
-    .selectAll("path")
-    .data(bidirectionalLinks)
-    .join("path")
+  linkGroups.append("path")
     .attr("class", "link")
     .attr("marker-start", d => d.infoReverse.trim() ? "url(#arrow-start)" : "")
-    .attr("marker-end", d => d.infoForward.trim() ? "url(#arrow-end)" : "")
-    .on("mousemove", function(event, d) {
-      // Get mouse position relative to the path
-      const path = d3.select(this).node();
-      const pathLength = path.getTotalLength();
-      let mousePoint = svg.node().createSVGPoint();
-      mousePoint.x = event.clientX;
-      mousePoint.y = event.clientY;
-      mousePoint = mousePoint.matrixTransform(path.getScreenCTM().inverse());
-      
-      // Find the closest point on the path to the mouse
-      let bestLength = 0;
-      let bestDistance = Infinity;
-      
-      // Sample points along the path to find the closest one
-      for (let len = 0; len <= pathLength; len += pathLength / 20) {
-        const point = path.getPointAtLength(len);
-        const distance = Math.sqrt(Math.pow(point.x - mousePoint.x, 2) + Math.pow(point.y - mousePoint.y, 2));
-        if (distance < bestDistance) {
-          bestDistance = distance;
-          bestLength = len;
+    .attr("marker-end", d => d.infoForward.trim() ? "url(#arrow-end)" : "");
+
+// Add this improved text wrapping function
+function wrapText(text, maxChars) {
+    const words = text.split(/(?<!-)\s+/); // Split on spaces not preceded by hyphens
+    const lines = [];
+    let currentLine = [];
+    let currentLength = 0;
+
+    words.forEach(word => {
+        if (currentLength + word.length + 1 <= maxChars) {
+            currentLine.push(word);
+            currentLength += word.length + 1;
+        } else {
+            lines.push(currentLine.join(' '));
+            currentLine = [word];
+            currentLength = word.length;
         }
-      }
-      
-      // Determine which tooltip to show based on position along the path
-      const ratio = bestLength / pathLength;
-      const tooltipText = ratio > 0.5 ? d.infoForward : d.infoReverse;
-      
-      // Only show tooltip if there's content
-      if (tooltipText.trim()) {
-        tooltip.transition().duration(100).style("opacity", .9);
-        tooltip.html(tooltipText)
-          .style("left", (event.pageX + 10) + "px")
-          .style("top", (event.pageY - 10) + "px");
-      } else {
-        tooltip.transition().duration(100).style("opacity", 0);
-      }
-    })
-    .on("mouseout", function() {
-      tooltip.transition().duration(500).style("opacity", 0);
     });
 
+    if (currentLine.length > 0) {
+        lines.push(currentLine.join(' '));
+    }
+
+    return lines;
+}
+
+// Update the tooltip creation section
+linkGroups.append("text")
+    .attr("class", "link-tooltip")
+    .style("opacity", 0)
+    .each(function(d) {
+        const text = d3.select(this);
+        text.selectAll("*").remove();
+
+        // Process content
+        const processDirection = (content, prefix) => {
+            return content.split(/<br\s*\/?>/)
+                .flatMap(line => 
+                    wrapText(line.trim().replace(/-/g, ' -'), 35)
+                )
+                .map(line => line.trim() ? `${prefix}${line}` : null)
+                .filter(Boolean);
+        };
+
+        let tooltipLines = [];
+        if (d.infoForward.trim()) {
+            tooltipLines.push(`${d.source.head}→${d.target.head}:`);
+            tooltipLines = tooltipLines.concat(
+                processDirection(d.infoForward, '  ')
+            );
+        }
+        if (d.infoReverse.trim()) {
+            tooltipLines.push(`${d.target.head}→${d.source.head}:`);
+            tooltipLines = tooltipLines.concat(
+                processDirection(d.infoReverse, '  ')
+            );
+        }
+
+        // Add background
+        text.append("rect")
+            .attr("class", "tooltip-bg")
+            .attr("fill", "lightyellow")
+            .attr("stroke", "#ccc")
+            .attr("rx", 4);
+
+        // Add text content with bold headers
+        tooltipLines.forEach((line, i) => {
+            const isHeader = line.includes('→') || line.includes('←');
+            text.append("tspan")
+                .attr("x", 0)
+                .attr("dy", i === 0 ? "0" : "1.2em")
+                .style("font-weight", isHeader ? "bold" : "normal")
+                .style("font-size", isHeader ? "13px" : "12px")
+                .text(line.replace(/^-/, '‐'));
+        });
+
+        // Update background size
+        const bbox = text.node().getBBox();
+        text.select("rect.tooltip-bg")
+            .attr("x", bbox.x - 5)
+            .attr("y", bbox.y - 2)
+            .attr("width", bbox.width + 10)
+            .attr("height", bbox.height + 4);
+    }).call(d3.drag()
+    .on("start", function(event, d) {
+        activeTooltip = d3.select(this);
+        const transform = activeTooltip.attr("transform");
+        let x = 0, y = 0;
+        
+        // Properly parse transform coordinates
+        if (transform) {
+            const match = transform.match(/translate\(([\d\.-]+),\s*([\d\.-]+)\)/);
+            if (match) {
+                x = parseFloat(match[1]);
+                y = parseFloat(match[2]);
+            }
+        }
+        
+        // Calculate offset from mouse position to tooltip center
+        const bbox = activeTooltip.node().getBBox();
+        const centerX = x + bbox.width/2;
+        const centerY = y + bbox.height/2;
+        
+        tooltipStartX = event.x - centerX;
+        tooltipStartY = event.y - centerY;
+    })
+    .on("drag", function(event, d) {
+        // Apply offset to maintain cursor position relative to tooltip center
+        activeTooltip.attr("transform", `translate(${event.x - tooltipStartX},${event.y - tooltipStartY})`);
+    })
+    .on("end", function() {
+        activeTooltip = null;
+    }));
+
+  // Create nodes
   const node = svg.append("g")
-    .selectAll("g")
+    .selectAll("g.node")
     .data(nodes)
     .join("g")
     .attr("class", "node")
-    .call(d3.drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended));
+    .attr("transform", d => `translate(${d.fx},${d.fy})`);
 
   node.append("rect")
     .attr("width", 120)
@@ -354,92 +432,79 @@
     .attr("x", -60)
     .attr("y", -30);
 
-  // Add head name in red above the rectangle
   node.append("text")
     .attr("text-anchor", "middle")
-    .attr("y", -40)  // Position above the rectangle
+    .attr("y", -40)
     .style("fill", "red")
     .text(d => d.head);
 
-	// Split label into two lines
-	node.append("text")
-	  .attr("text-anchor", "middle")
-	  .attr("dy", "-0.5em")  // First line (top)
-	  .text(d => {
-		const parts = d.label.split(" & ");
-		return parts[0] + (parts.length > 1 ? " &" : ""); // Keep "et" on first line
-	  });
+  node.append("text")
+    .attr("text-anchor", "middle")
+    .attr("dy", "-0.5em")
+    .text(d => d.label.split(" & ")[0] + (d.label.includes(" & ") ? " &" : ""));
 
-	node.append("text")
-	  .attr("text-anchor", "middle")
-	  .attr("dy", "1.1em")   // Second line (bottom)
-	  .text(d => {
-		const parts = d.label.split(" & ");
-		return parts.length > 1 ? parts[1] : ""; // Second part (after "et")
-	  });
+  node.append("text")
+    .attr("text-anchor", "middle")
+    .attr("dy", "1.1em")
+    .text(d => d.label.split(" & ")[1] || "");
 
-  simulation.on("tick", () => {
-    link.attr("d", d => {
-	  // Calculate direction vector between nodes
-	  const dx = d.target.x - d.source.x;
-	  const dy = d.target.y - d.source.y;
-	  const length = Math.sqrt(dx * dx + dy * dy);
-	  
-	  // Calculate normalized direction vector
-	  const nx = dx / length;
-	  const ny = dy / length;
-	  
-	  // Calculate offset (half of rectangle width + some padding)
-	  const offset = 65; // 50 (half width) + 15 (padding)
-	  
-	  // Calculate adjusted start and end points
-	  const sourceX = d.source.x + nx * offset;
-	  const sourceY = d.source.y + ny * offset;
-	  const targetX = d.target.x - nx * offset;
-	  const targetY = d.target.y - ny * offset;
-	  
-	  // Calculate control point for the curve
-	  // Position it perpendicular to the line at the midpoint
-	  const midX = (sourceX + targetX) / 2;
-	  const midY = (sourceY + targetY) / 2;
-	  
-	  // Adjust curvature amount (higher values = more curve)
-	  const curvature = 80;
-	  
-	  // Calculate control point perpendicular to the line
-	  const ctrlX = midX + curvature * -ny;
-	  const ctrlY = midY + curvature * nx;
-	  
-	  // Create a quadratic Bézier curve
-	  return `M${sourceX},${sourceY}Q${ctrlX},${ctrlY} ${targetX},${targetY}`;
-	});
-	
+  // Click handler for nodes
+  node.on("click", function(event, d) {
+    const isHighlighted = highlightedNodes.has(d.id);
+    d3.select(this).classed("highlighted", !isHighlighted);
+    
+    if (isHighlighted) {
+      highlightedNodes.delete(d.id);
+    } else {
+      highlightedNodes.add(d.id);
+    }
 
-    node.attr("transform", d => `translate(${d.x},${d.y})`);
+    linkGroups.each(function(link) {
+      const active = highlightedNodes.has(link.source.id) && 
+                     highlightedNodes.has(link.target.id);
+      d3.select(this).select(".link").style("opacity", active ? 1 : 0);
+      d3.select(this).select(".link-tooltip").style("opacity", active ? 1 : 0);
+    });
   });
 
-  function dragstarted(event, d) {
-    if (!event.active) simulation.alphaTarget(0.3).restart();
-    d.fx = d.x;
-    d.fy = d.y;
-  }
-
-  function dragged(event, d) {
-    d.fx = event.x;
-    d.fy = event.y;
-  }
-
-  function dragended(event, d) {
-    if (!event.active) simulation.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
-  }
+  // Position elements
+  const simulation = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(processedLinks).id(d => d.id).distance(200))
+    .force("charge", d3.forceManyBody().strength(-1000))
+    .on("tick", () => {
+      linkGroups.each(function(d) {
+        const source = d.source;
+        const target = d.target;
+        const dx = target.x - source.x;
+        const dy = target.y - source.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const nx = dx / length;
+        const ny = dy / length;
+        const offset = 65;
+        
+        const sourceX = source.x + nx * offset;
+        const sourceY = source.y + ny * offset;
+        const targetX = target.x - nx * offset;
+        const targetY = target.y - ny * offset;
+        const midX = (sourceX + targetX) / 2;
+        const midY = (sourceY + targetY) / 2;
+        const curvature = 80;
+        const ctrlX = midX + curvature * -ny;
+        const ctrlY = midY + curvature * nx;
+        
+        d3.select(this).select(".link")
+          .attr("d", `M${sourceX},${sourceY}Q${ctrlX},${ctrlY} ${targetX},${targetY}`);
+        
+        if (!activeTooltip || d3.select(this).select(".link-tooltip").node() !== activeTooltip.node()) {
+            d3.select(this).select(".link-tooltip")
+                .attr("transform", `translate(${midX},${midY})`);
+        }
+    });
+});
 </script>
 <br />
 (*) Administration = Stratégie et Pilotage (Niv. 2)
-<br />
-<br />
-<br />
+<br /><br /><br />
 <font size="5"> 
 <a href="index.html"> <<< Back </a>
 </font>
