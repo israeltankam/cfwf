@@ -35,10 +35,43 @@
     }
     .link-tooltip { pointer-events: auto; }
   </style>
+  <!-- === BEGIN LEADFLOW INJECTION === -->
+<!-- === BEGIN LEADFLOW INJECTION === -->
+<style>
+  #leadflow { display: flex; align-items: center; gap: 40px; margin: 40px; }
+  .lf-step { display: flex; flex-direction: column; align-items: center; position: relative; }
+  .lf-actor { margin-bottom: 8px; font-weight: bold; }
+  .lf-box {
+    background: #4682B4; color: #fff;
+    width: 200px; padding: 12px; border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  .lf-box h4 { margin: 0 0 8px; font-size: 1em; }
+  .lf-box ul { margin: 0; padding-left: 1.2em; }
+  .lf-duration { margin-top: 8px; color: #4682B4; font-weight: bold; }
+  .lf-arrow { flex-shrink: 0; }
+  .lf-tooltip {
+	position: absolute;
+	pointer-events: none;
+	background: rgba(0,0,0,0.8);
+	color: #fff;
+	padding: 8px;
+	border-radius: 4px;
+	font-size: 12px;
+
+	/* largeur libre, mais hauteur limitée : */
+	min-width: 200px;    /* assure suffisamment de largeur */
+	max-height: 120px;   /* limite la hauteur du tooltip */
+	overflow-y: auto;    /* ajoute un scroll vertical si besoin */
+	white-space: normal;  /* autorise le retour à la ligne */
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+</style>
 </head>
 <body>
 <center><font size="5">Cliquer sur deux ou plusieurs pôles pour voir leur interactions</font></center>
-<svg width="1850" height="850"></svg>
+<svg width="2850" height="850"></svg>
 <script>
   const nodes = [
     { id: 'I', label: 'Innovation & Exp. Client', head: 'Patrick', fx: 1100, fy: 100 },
@@ -50,7 +83,7 @@
     { id: 'U', label: 'Stratégie & Pilotage (Nv.3)', head: 'Robertine', fx: 1450, fy: 650 },
     { id: 'D', label: 'Commercial & Dév. (Nv.2)', head: 'Robertine', fx: 1700, fy: 600 },
     { id: 'C', label: 'Commercial & Développement', head: 'Martine', fx: 60, fy: 120 },
-    { id: 'M', label: 'Marketing & Communication', head: 'Ingrid', fx: 350, fy: 650 },
+    { id: 'M', label: 'Marketing & Communication', head: 'Ingrid', fx: 350, fy: 550 },
   ];
   let isDragging = false, startX = 0, startY = 0;
   let dragOffset = { x: 0, y: 0 }, activeTooltip = null, tooltipStartX = 0, tooltipStartY = 0;
@@ -73,6 +106,8 @@
   const dataFinancieres          = "Données financières";
   const dataComptabilite         = "Données comptables & administratives";
   const dataSuiviClients         = "Données & suivi clients";
+  const leadsQualifies           = "Leads qualifiés";
+  const prospectsChauds          = "Prospects chauds prêts à RDV";
 
   const commandesClients         = "Commandes clients";
   const validationCommandes      = "Validation des commandes";
@@ -91,6 +126,7 @@
   const kitFormationMixologie    = "Kit de formation mixologie";
   const ordresAnimationFormation = "Ordres d’animation & formation";
   const ordreEngagement          = "Ordres d’engagement";
+  const rdvPlanifies             = "RDV planifiés";
 
   const guidesStrategiques       = "Guides & documents stratégiques";
   const majSupportsCommerciaux   = "Mises à jour & supports commerciaux";
@@ -100,25 +136,26 @@
 
   // Simplified bidirectional links
   const bidirectionalLinks = [
-    { source: 'H', target: 'S', infoForward: `- ${programmeFormation}`, infoReverse: `- ${directivesFormation}` },
+    { source: 'H', target: 'S', infoForward: `- ${programmeFormation}<br>- ${retourClients}`, infoReverse: `- ${directivesFormation}` },
     { source: 'D', target: 'S', infoForward: `- ${rapportCommercial}`, infoReverse: `- ${consignesVente}` },
     { source: 'U', target: 'S', infoForward: `- ${dataFinancieres}<br>- ${inventaireStocks}`, infoReverse: `- ${gestionProximite}` },
     { source: 'U', target: 'S', infoForward: `- ${rapportsOperationnels}`, infoReverse: `` },
     { source: 'D', target: 'H', infoForward: `- ${rapportClient}`, infoReverse: `- ${rapportClient}` },
     { source: 'P', target: 'U', infoForward: `- ${inventaireStocks}`, infoReverse: `- ${facturationOperations}<br>- ${planProduction}` },
     { source: 'I', target: 'H', infoForward: `- ${kitFormationMixologie}`, infoReverse: `- ${ordresAnimationFormation}` },
-    { source: 'I', target: 'S', infoForward: `- ${retourExperience}`, infoReverse: `- ${planificationDirectives}` },
+    { source: 'I', target: 'S', infoForward: `- ${retourExperience}<br>- ${retourClients}`, infoReverse: `- ${planificationDirectives}` },
     { source: 'K', target: 'S', infoForward: `- ${dataFinancieres}`, infoReverse: `- ${evaluationRetours}` },
     { source: 'U', target: 'K', infoForward: `- ${rapportFinancierInventaire}<br>- ${questionDocAdmin}`, infoReverse: `- ${dataComptabilite}<br>- ${planProduction}` },
     { source: 'L', target: 'C', infoForward: `- ${suiviLivraison}`, infoReverse: `` },
     { source: 'C', target: 'U', infoForward: `- ${commandesClients}`, infoReverse: `- ${validationCommandes}` },
     { source: 'P', target: 'L', infoForward: `- ${commandesClients}`, infoReverse: `` },
     { source: 'S', target: 'C', infoForward: `- ${guidesStrategiques}`, infoReverse: `- ${rapportCommercial}` },
-    { source: 'M', target: 'C', infoForward: `- ${majSupportsCommerciaux}`, infoReverse: `- ${dataSuiviClients}` },
+    { source: 'M', target: 'C', infoForward: `- ${leadsQualifies}<br>- ${majSupportsCommerciaux}`, infoReverse: `- ${dataSuiviClients}` },
+	{ source: 'M', target: 'H', infoForward: `- ${leadsQualifies}`, infoReverse:`- ${retourClients}`},
     { source: 'M', target: 'U', infoForward: `- ${retourClients}`, infoReverse: `- ${historiqueCommandes}` },
     { source: 'K', target: 'M', infoForward: `- ${planProduction}`, infoReverse: `- ${previsionDemande}` },
     { source: 'D', target: 'C', infoForward: `- ${closingGrosClients}`, infoReverse: `` },
-    { source: 'C', target: 'H', infoForward: `- ${ordreEngagement}`, infoReverse: `` },
+    { source: 'C', target: 'H', infoForward: `- ${ordreEngagement} (${prospectsChauds})<br>- ${ordreEngagement} (${rdvPlanifies}`, infoReverse: `` },
     { source: 'C', target: 'K', infoForward: `- ${questionDocAdmin}`, infoReverse: `- ${documentAdministratif}` }
   ];
 
@@ -242,6 +279,189 @@
           d3.select(this).select(".link-tooltip").attr("transform",`translate(${mx},${my})`);
       });
     });
+	
+	// === BEGIN LEADFLOW INJECTION ===
+
+// 1) Créer un mapping id → node pour récupérer .label
+const Nodes = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+// 2) Définition des données du Leadflow
+const leadFlow = [
+  {
+    step: 1,
+    title: "Génération de leads",
+    actorIds: ['M'],                  // Marketing & Communication
+    entries: "Brief marketing, ciblage CRM",
+    outputs: leadsQualifies,
+    delay: "1 semaine",
+    duration: "3 semaines",
+    notes: "• A/B tests chaque semaine\n• Webhook CRM pour mise à jour continue",
+    tools: "Plateformes Meta/Google Ads, landing page, CRM",
+    metrics: "CTR ≥ 2 %, CPL ≤ 1 500 FCFA"
+  },
+  {
+    step: 2,
+    title: "Qualification (méthode BANT)",
+    actorIds: ['D','C'],              // Commercial & Dév. (Nv.2) / Commercial & Développement
+    entries: leadsQualifies,
+    outputs: prospectsChauds,
+    delay: "2 jours",
+    duration: "1 semaine",
+    notes: "• Relance si pas de réponse en 12 h\n• Fiche détaillée auto-générée dans le CRM",
+    tools: "Script BANT, CRM, call-script",
+    metrics: "Taux qualif. ≥ 60 %, délai < 24 h"
+  },
+  {
+    step: 3,
+    title: "Organisation & animation de la dégustation",
+    actorIds: ['H','I'],              // Innovation & Exp. Client (Nv.2) / Innovation & Exp. Client
+    entries: prospectsChauds,
+    outputs: `${retourClients}, ${rapportCommercial}`,
+    delay: "1 jour",
+    duration: "1,5 semaine",
+    notes: "• Brief 2 h avant événement\n• Captation vidéo (≤ 30 s)\n• Kit mixologie (kitFormationMixologie)",
+    tools: `${programmeFormation}, quiz en ligne`,
+    metrics: "Score moyen ≥ 4/5, quiz complété 100 %"
+  },
+  {
+    step: 4,
+    title: "Suivi & relance prospects",
+    actorIds: ['C','H','I'],          // C / H / I
+    entries: retourClients,
+    outputs: rdvPlanifies,
+    delay: "3 jours",
+    duration: "1,5 semaine",
+    notes: "• Relance multicanal (mail, SMS, appel)\n• Coaching express sur objections clés",
+    tools: "CRM, scripts e-mail/appel",
+    metrics: "Taux de réponse ≥ 50 %, 1 RDV/5 prospects"
+  },
+  {
+    step: 5,
+    title: "Proposition & négociation",
+    actorIds: ['C'],
+    entries: "RDV démo, besoins client",
+    outputs: rapportCommercial,
+    delay: "1 semaine",
+    duration: "2 semaines",
+    notes: "• Scénarios de remises selon volume\n• Options « pack formation » intégrées\n• Relances pré-programmées J+3, J+7, J+14",
+    tools: "Modèle de devis, grille tarifaire, calculateur ROI",
+    metrics: "Conv. devis→commande ≥ 30 %"
+  },
+  {
+    step: 6,
+    title: "Closing & contractualisation",
+    actorIds: ['C'],
+    entries: "Accord verbal, modèle de contrat",
+    outputs: `${documentAdministratif}, ${facturationOperations}`,
+    delay: "2 jours",
+    duration: "1,5 semaine",
+    notes: "• Vérification mentions légales & RGPD\n• Automatisation envoi du kit onboarding (doc + accès e-learning)",
+    tools: "Contrat type, documents administratifs",
+    metrics: "% contrats signés, DSO ≤ 7 jours"
+  },
+  {
+    step: 7,
+    title: "Onboarding & formation client",
+    actorIds: ['H','I'],
+    entries: "Contrat signé, profil client, planning",
+    outputs: `${programmeFormation}, ${kitFormationMixologie}`,
+    delay: "1–2 jours",
+    duration: "1,5 semaine",
+    notes: "• Atelier mixologie (45 min)\n• Mini-guide PDF personnalisé\n• Questionnaire de satisfaction à chaud + suivi à J+30",
+    tools: "Programme de formation, plateforme e-learning, kit de bienvenue",
+    metrics: "Satisfaction ≥ 4,5/5, prise en main ≤ 5 jours"
+  }
+];
+
+// helper pour dessiner une flèche avec label
+function appendArrow(parent, label, yOffset = 20, length = 120) {
+  const headSize = 10;               // taille de la pointe
+  const totalWidth = length + headSize;
+  const svg = parent.append("svg")
+    .attr("class","lf-arrow")
+    .attr("width", totalWidth)
+    .attr("height", 40)
+    .style("overflow","visible");
+
+  // Trait principal
+  svg.append("line")
+    .attr("x1", 0).attr("y1", yOffset)
+    .attr("x2", length).attr("y2", yOffset)
+    .attr("stroke","#4682B4").attr("stroke-width",4);
+
+  // Flèche (triangle)
+  svg.append("polygon")
+    .attr("points", 
+      `${length},${yOffset-headSize/2} `+
+      `${length+headSize},${yOffset} `+
+      `${length},${yOffset+headSize/2}`
+    )
+    .attr("fill","#4682B4");
+
+  // Label
+  svg.append("text")
+    .attr("x", length/2).attr("y", yOffset-8)
+    .attr("text-anchor","middle")
+    .style("font-size","10px").style("fill","#333")
+    .text(label);
+}
+
+// créer le conteneur en ligne
+const flowContainer = d3.select("body")
+  .append("div").attr("id","leadflow");
+
+// boucle sur leadFlow existant
+leadFlow.forEach((d, i) => {
+  // flèche d'entrée avant le 1er bloc
+  if (i === 0 && d.entries) {
+    appendArrow(flowContainer, d.entries, 12, 100);
+  }
+
+  // étape
+  const step = flowContainer.append("div").attr("class","lf-step");
+  // acteur(s)
+  step.append("div")
+    .attr("class","lf-actor")
+    .text(d.actorIds.map(id => Nodes[id].head).join(" / "));
+  // rectangle
+  const box = step.append("div").attr("class","lf-box")
+    .on("mouseover", () => tooltip.style("opacity", 1))
+    .on("mousemove", e => tooltip.style("left", e.pageX + 10 + "px").style("top", e.pageY + 10 + "px"))
+    .on("mouseout", () => tooltip.style("opacity", 0));
+  box.append("h4").text(`${d.step} – ${d.title}`);
+  const ul = box.append("ul");
+  d.notes.split("\n").forEach(n => {
+    if (n.trim()) ul.append("li").text(n.replace(/^•\s*/, ""));
+  });
+  // durée en bas
+  step.append("div")
+    .attr("class","lf-duration")
+    .text(d.duration);
+
+  // flèche de sortie (sauf après dernier)
+  if (i < leadFlow.length - 1 && d.outputs) {
+    appendArrow(flowContainer, d.outputs, 20, 150);
+  }
+});
+
+// infobulle
+const tooltip = d3.select("body")
+  .append("div").attr("class","lf-tooltip");
+
+// remplir outils & métriques
+d3.selectAll(".lf-box").each(function(_, i) {
+  d3.select(this).on("mouseover.tooltip", () => {
+    const dd = leadFlow[i];
+    tooltip.html(
+      `<strong>Outils :</strong> ${dd.tools}<br>` +
+      `<strong>Métriques :</strong> ${dd.metrics}`
+    );
+  });
+});
+
+<!-- === END LEADFLOW INJECTION === -->
+
+
 </script>
 <br>(*) Administration = Stratégie et Pilotage (Niv. 2)
 <br><br><br>
